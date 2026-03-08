@@ -5,8 +5,29 @@ import { Card, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { timeAgo } from "@/lib/utils";
-import { Plus, Target, Trash2, ArrowRight, Users, Send, MessageSquare } from "lucide-react";
+import { Plus, Target, Trash2, ArrowRight, Users, Send, MessageSquare, Home } from "lucide-react";
 import Link from "next/link";
+
+const TEMPLATES: { name: string; icp: string; icon: string; tag: string }[] = [
+  {
+    name: "OKC Roofing Leads",
+    tag: "Recommended",
+    icon: "🏠",
+    icp: "Homeowners in Oklahoma City metro area (OKC, Edmond, Moore, Norman, Yukon, Mustang, Choctaw, Midwest City, Del City, Piedmont) whose roof is 10+ years old OR has visible hail/storm damage. Target property owners (not renters), single-family homes and small commercial properties. Pain points: insurance claim navigation, storm damage repair, aging shingles, energy inefficiency, leaks. Buying signals: recent hail event in their zip code, home age 10-20 years, active insurance policy, HOA compliance notices. Exclude: new construction, apartments, properties listed for sale.",
+  },
+  {
+    name: "B2B SaaS SDR Outreach",
+    tag: "Popular",
+    icon: "💼",
+    icp: "B2B SaaS companies with 50-500 employees, VP of Sales or Head of Revenue, struggling with manual lead qualification, using Salesforce, US-based",
+  },
+  {
+    name: "Dental Practice Automation",
+    tag: "",
+    icon: "🦷",
+    icp: "Dental practices with 2+ locations, practice owner or office manager, overwhelmed with scheduling and no-shows, 10-50 staff",
+  },
+];
 
 export default function CampaignsPage() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
@@ -43,11 +64,6 @@ export default function CampaignsPage() {
     load();
   }
 
-  const ICP_EXAMPLES = [
-    "B2B SaaS companies with 50-500 employees, VP of Sales or Head of Revenue, struggling with manual lead qualification, using Salesforce, US-based",
-    "Dental practices with 2+ locations, practice owner or office manager, overwhelmed with scheduling and no-shows, 10-50 staff",
-    "Real estate agencies with 5-20 agents, broker/owner, losing leads because of slow follow-up, operating in Southeast US",
-  ];
 
   return (
     <div className="p-8">
@@ -76,10 +92,16 @@ export default function CampaignsPage() {
           </div>
           <h2 className="text-lg font-semibold text-slate-800 mb-2">No campaigns yet</h2>
           <p className="text-sm text-slate-500 max-w-sm mb-6">
-            Define your Ideal Customer Profile and let the AI find and engage matching leads.
+            Start with the{" "}
+            <span className="font-semibold text-slate-700">OKC Roofing Leads</span>{" "}
+            template to find homeowners in the Oklahoma City metro who need a new roof — or
+            define your own ICP.
           </p>
-          <Button onClick={() => setModalOpen(true)}>
-            <Plus size={16} /> Create your first campaign
+          <Button onClick={() => {
+            setForm({ name: TEMPLATES[0].name, icp_description: TEMPLATES[0].icp });
+            setModalOpen(true);
+          }}>
+            <Home size={16} /> Start with OKC Roofing
           </Button>
         </div>
       )}
@@ -172,15 +194,26 @@ export default function CampaignsPage() {
           </div>
 
           <div>
-            <p className="text-xs font-medium text-slate-500 mb-2">Examples:</p>
+            <p className="text-xs font-medium text-slate-500 mb-2">Quick-start templates:</p>
             <div className="space-y-2">
-              {ICP_EXAMPLES.map((ex, i) => (
+              {TEMPLATES.map((t) => (
                 <button
-                  key={i}
-                  onClick={() => setForm({ ...form, icp_description: ex })}
-                  className="w-full text-left text-xs text-slate-500 hover:text-violet-600 bg-slate-50 hover:bg-violet-50 border border-slate-200 hover:border-violet-200 rounded-lg px-3 py-2 transition-colors"
+                  key={t.name}
+                  onClick={() => setForm({ name: t.name, icp_description: t.icp })}
+                  className="w-full text-left bg-slate-50 hover:bg-violet-50 border border-slate-200 hover:border-violet-300 rounded-lg px-3 py-2.5 transition-colors group"
                 >
-                  {ex}
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <span className="text-base leading-none">{t.icon}</span>
+                    <span className="text-xs font-semibold text-slate-700 group-hover:text-violet-700">
+                      {t.name}
+                    </span>
+                    {t.tag && (
+                      <span className="text-xs px-1.5 py-0.5 rounded-full bg-violet-100 text-violet-600 font-medium">
+                        {t.tag}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-slate-400 line-clamp-1 pl-6">{t.icp}</p>
                 </button>
               ))}
             </div>
