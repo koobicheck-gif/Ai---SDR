@@ -56,6 +56,24 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Paths exempt from auth (health probe, root info, Swagger UI)
+_PUBLIC_PATHS = {"/health", "/", "/docs", "/openapi.json", "/redoc"}
+
+
+@app.middleware("http")
+async def auth_middleware(request: Request, call_next):
+    """Enforce X-Dashboard-Secret header when DASHBOARD_SECRET env var is set."""
+    if app_settings.dashboard_secret:
+        # Always allow CORS preflight and public paths through
+        if request.method != "OPTIONS" and request.url.path not in _PUBLIC_PATHS:
+            secret = request.headers.get("X-Dashboard-Secret", "")
+            if secret != app_settings.dashboard_secret:
+                return JSONResponse(
+                    status_code=401,
+                    content={"detail": "Unauthorized — invalid or missing dashboard secret"},
+                )
+    return await call_next(request)
+
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):

@@ -6,10 +6,25 @@ export const api = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 
-// Surface backend error messages instead of generic Axios errors
+// Attach the dashboard secret to every request (stored in localStorage after login)
+api.interceptors.request.use((config) => {
+  if (typeof window !== "undefined") {
+    const secret = localStorage.getItem("dashboard_secret");
+    if (secret && secret !== "__DEMO__") {
+      config.headers["X-Dashboard-Secret"] = secret;
+    }
+  }
+  return config;
+});
+
+// Surface backend error messages; redirect to /login on 401
 api.interceptors.response.use(
   (res) => res,
   (err: AxiosError<{ detail?: string }>) => {
+    if (err.response?.status === 401 && typeof window !== "undefined") {
+      localStorage.removeItem("dashboard_secret");
+      window.location.href = "/login?error=unauthorized";
+    }
     if (err.response?.data?.detail) {
       err.message = err.response.data.detail;
     }

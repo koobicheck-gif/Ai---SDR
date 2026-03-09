@@ -24,6 +24,9 @@ services:
       # Comma-separated origins the frontend is served from.
       # Remote: "http://YOUR_SERVER_IP:3000,https://yourdomain.com"
       - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:3000}
+      # Dashboard password. Must match what users enter on the login page.
+      # Generate: python3 -c "import secrets; print(secrets.token_urlsafe(32))"
+      - DASHBOARD_SECRET=${DASHBOARD_SECRET:-}
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]

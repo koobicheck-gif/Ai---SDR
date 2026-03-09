@@ -18,6 +18,11 @@ class Settings(BaseSettings):
     # Example: "http://localhost:3000,https://yourdomain.com"
     cors_origins: str = "http://localhost:3000,http://localhost:3001"
 
+    # Dashboard auth secret. If set, every API request must include:
+    #   X-Dashboard-Secret: <value>
+    # Leave unset to disable auth (fine for local dev behind firewall).
+    dashboard_secret: Optional[str] = None
+
     # Default LLM provider: "anthropic" | "openai" | "openrouter"
     default_llm_provider: str = "anthropic"
     default_model: str = "claude-sonnet-4-6"
