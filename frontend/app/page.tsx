@@ -41,13 +41,13 @@ export default function HomePage() {
     : [];
 
   return (
-    <div className="p-8">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-slate-900">Dashboard</h1>
+    <div className="p-4 sm:p-8">
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Dashboard</h1>
         <p className="mt-1 text-sm text-slate-500">Autonomous AI-powered lead generation and outreach</p>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
         <StatCard title="Total Leads" value={loading ? "—" : analytics?.total_leads ?? 0} icon={Users} color="violet" />
         <StatCard title="Contacted" value={loading ? "—" : analytics?.contacted ?? 0} subtitle={analytics ? `${analytics.response_rate}% response rate` : undefined} icon={Send} color="blue" />
         <StatCard title="Qualified" value={loading ? "—" : analytics?.qualified ?? 0} subtitle={analytics ? `${analytics.qualification_rate}% qual. rate` : undefined} icon={TrendingUp} color="green" />
@@ -114,31 +114,33 @@ export default function HomePage() {
               </Link>
             </div>
           ) : (
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-slate-100">
-                  {["Campaign", "Leads", "Contacted", "Responded", "Created", ""].map((h) => (
-                    <th key={h} className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {campaigns.slice(0, 5).map((c) => (
-                  <tr key={c.id} className="hover:bg-slate-50">
-                    <td className="px-6 py-3 font-medium text-slate-900">{c.name}</td>
-                    <td className="px-6 py-3 text-slate-600">{c.lead_count}</td>
-                    <td className="px-6 py-3 text-slate-600">{c.contacted_count}</td>
-                    <td className="px-6 py-3 text-slate-600">{c.responded_count}</td>
-                    <td className="px-6 py-3 text-slate-400 text-xs">{timeAgo(c.created_at)}</td>
-                    <td className="px-6 py-3">
-                      <Link href={`/campaigns/${c.id}`}>
-                        <Button variant="ghost" size="sm">View</Button>
-                      </Link>
-                    </td>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm min-w-[500px]">
+                <thead>
+                  <tr className="border-b border-slate-100">
+                    {["Campaign", "Leads", "Contacted", "Responded", "Created", ""].map((h) => (
+                      <th key={h} className="text-left px-4 sm:px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">{h}</th>
+                    ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {campaigns.slice(0, 5).map((c) => (
+                    <tr key={c.id} className="hover:bg-slate-50">
+                      <td className="px-4 sm:px-6 py-3 font-medium text-slate-900">{c.name}</td>
+                      <td className="px-4 sm:px-6 py-3 text-slate-600">{c.lead_count}</td>
+                      <td className="px-4 sm:px-6 py-3 text-slate-600">{c.contacted_count}</td>
+                      <td className="px-4 sm:px-6 py-3 text-slate-600">{c.responded_count}</td>
+                      <td className="px-4 sm:px-6 py-3 text-slate-400 text-xs">{timeAgo(c.created_at)}</td>
+                      <td className="px-4 sm:px-6 py-3">
+                        <Link href={`/campaigns/${c.id}`}>
+                          <Button variant="ghost" size="sm">View</Button>
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </CardContent>
       </Card>

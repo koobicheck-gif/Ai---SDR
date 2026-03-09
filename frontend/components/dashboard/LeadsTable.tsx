@@ -64,7 +64,7 @@ export function LeadsTable({ leads, onRefresh }: LeadsTableProps) {
     <div className="flex flex-col gap-4">
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-3">
-        <div className="relative flex-1 min-w-48">
+        <div className="relative flex-1 min-w-0">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
             type="text"
@@ -110,13 +110,13 @@ export function LeadsTable({ leads, onRefresh }: LeadsTableProps) {
       {/* Table */}
       <div className="rounded-xl border border-slate-200 overflow-hidden bg-white">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full text-sm min-w-[640px]">
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200">
                 <th className="text-left px-4 py-3 font-medium text-slate-500 text-xs uppercase tracking-wide">
                   Lead
                 </th>
-                <th className="text-left px-4 py-3 font-medium text-slate-500 text-xs uppercase tracking-wide">
+                <th className="text-left px-4 py-3 font-medium text-slate-500 text-xs uppercase tracking-wide hidden sm:table-cell">
                   Company
                 </th>
                 <th className="text-left px-4 py-3 font-medium text-slate-500 text-xs uppercase tracking-wide">
@@ -125,7 +125,7 @@ export function LeadsTable({ leads, onRefresh }: LeadsTableProps) {
                 <th className="text-left px-4 py-3 font-medium text-slate-500 text-xs uppercase tracking-wide">
                   Score
                 </th>
-                <th className="text-left px-4 py-3 font-medium text-slate-500 text-xs uppercase tracking-wide">
+                <th className="text-left px-4 py-3 font-medium text-slate-500 text-xs uppercase tracking-wide hidden md:table-cell">
                   Added
                 </th>
                 <th className="text-right px-4 py-3 font-medium text-slate-500 text-xs uppercase tracking-wide">
@@ -153,7 +153,7 @@ export function LeadsTable({ leads, onRefresh }: LeadsTableProps) {
                       <p className="text-xs text-slate-400 mt-0.5">{lead.title || "—"}</p>
                     </div>
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3 hidden sm:table-cell">
                     <div>
                       <p className="text-slate-700">{lead.company || "—"}</p>
                       <p className="text-xs text-slate-400 mt-0.5">
@@ -178,7 +178,7 @@ export function LeadsTable({ leads, onRefresh }: LeadsTableProps) {
                       <span className="text-xs font-medium text-slate-600">{lead.score}</span>
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-xs text-slate-400">{timeAgo(lead.created_at)}</td>
+                  <td className="px-4 py-3 text-xs text-slate-400 hidden md:table-cell">{timeAgo(lead.created_at)}</td>
                   <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                     <div className="flex items-center justify-end gap-1">
                       {lead.linkedin_url && (

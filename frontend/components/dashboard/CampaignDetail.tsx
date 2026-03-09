@@ -52,15 +52,16 @@ export function CampaignDetail({ id }: { id: string }) {
   const icp = campaign.icp_parsed as Record<string, unknown>;
 
   return (
-    <div className="p-8">
-      <div className="flex items-start gap-4 mb-6">
-        <Link href="/campaigns">
+    <div className="p-4 sm:p-8">
+      {/* Header — stacks on mobile */}
+      <div className="flex flex-col sm:flex-row sm:items-start gap-3 mb-6">
+        <Link href="/campaigns" className="self-start">
           <Button variant="ghost" size="sm" className="p-2">
             <ArrowLeft size={16} />
           </Button>
         </Link>
         <div className="flex-1 min-w-0">
-          <h1 className="text-2xl font-bold text-slate-900">{campaign.name}</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900">{campaign.name}</h1>
           <p className="mt-1 text-sm text-slate-500 line-clamp-2">{campaign.icp_description}</p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
@@ -74,7 +75,7 @@ export function CampaignDetail({ id }: { id: string }) {
             ))}
           </select>
           <Button onClick={handleGenerate} loading={generating}>
-            <Zap size={15} /> Generate Leads
+            <Zap size={15} /> <span className="hidden sm:inline">Generate Leads</span><span className="sm:hidden">Generate</span>
           </Button>
           <Button variant="outline" onClick={load} className="p-2">
             <RefreshCw size={15} />
@@ -82,7 +83,7 @@ export function CampaignDetail({ id }: { id: string }) {
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6">
         {[
           { label: "Total Leads", value: campaign.lead_count, icon: Users },
           { label: "Contacted", value: campaign.contacted_count, icon: Send },

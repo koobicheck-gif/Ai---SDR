@@ -104,9 +104,9 @@ export default function SettingsPage() {
   const availableModels: ModelOption[] = models[llmConfig.provider] || [];
 
   return (
-    <div className="p-8 max-w-3xl">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-slate-900">Settings</h1>
+    <div className="p-4 sm:p-8 max-w-3xl">
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Settings</h1>
         <p className="mt-1 text-sm text-slate-500">Configure API keys and AI model preferences</p>
       </div>
 
@@ -209,7 +209,7 @@ export default function SettingsPage() {
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1.5">Provider</label>
               <select
@@ -246,7 +246,7 @@ export default function SettingsPage() {
 
           <div className="rounded-lg bg-slate-50 p-3 border border-slate-200">
             <p className="text-xs text-slate-500 font-medium mb-2">Cost Guide</p>
-            <div className="grid grid-cols-2 gap-y-1 text-xs text-slate-600">
+            <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-slate-600">
               <span>Claude Haiku 4.5</span><span className="text-green-600 font-medium">~$0.0003/1K tokens</span>
               <span>Claude Sonnet 4.6</span><span className="text-yellow-600 font-medium">~$0.003/1K tokens</span>
               <span>GPT-4o Mini</span><span className="text-green-600 font-medium">~$0.0002/1K tokens</span>

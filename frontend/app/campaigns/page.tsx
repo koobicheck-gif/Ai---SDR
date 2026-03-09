@@ -66,14 +66,14 @@ export default function CampaignsPage() {
 
 
   return (
-    <div className="p-8">
-      <div className="flex items-center justify-between mb-8">
+    <div className="p-4 sm:p-8">
+      <div className="flex items-center justify-between mb-6 sm:mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Campaigns</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Campaigns</h1>
           <p className="mt-1 text-sm text-slate-500">Each campaign targets a specific ICP with an AI agent</p>
         </div>
         <Button onClick={() => setModalOpen(true)}>
-          <Plus size={16} /> New Campaign
+          <Plus size={16} /> <span className="hidden sm:inline">New Campaign</span><span className="sm:hidden">New</span>
         </Button>
       </div>
 

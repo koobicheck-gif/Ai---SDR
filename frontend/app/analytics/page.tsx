@@ -65,10 +65,10 @@ export default function AnalyticsPage() {
     : [];
 
   return (
-    <div className="p-8">
-      <div className="flex items-center justify-between mb-8">
+    <div className="p-4 sm:p-8">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6 sm:mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Analytics</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Analytics</h1>
           <p className="mt-1 text-sm text-slate-500">Performance metrics across campaigns</p>
         </div>
         <select
@@ -87,7 +87,7 @@ export default function AnalyticsPage() {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
         <StatCard title="Total Leads" value={loading ? "—" : analytics?.total_leads ?? 0} icon={Users} color="violet" />
         <StatCard
           title="Response Rate"
@@ -140,15 +140,17 @@ export default function AnalyticsPage() {
             {statusData.length === 0 ? (
               <div className="flex items-center justify-center h-48 text-slate-400 text-sm">No data</div>
             ) : (
-              <div className="flex items-center gap-4">
-                <ResponsiveContainer width="60%" height={200}>
-                  <PieChart>
-                    <Pie data={statusData} cx="50%" cy="50%" innerRadius={45} outerRadius={80} paddingAngle={3} dataKey="value">
-                      {statusData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
+              <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                <div className="w-full sm:w-[60%] shrink-0">
+                  <ResponsiveContainer width="100%" height={200}>
+                    <PieChart>
+                      <Pie data={statusData} cx="50%" cy="50%" innerRadius={45} outerRadius={80} paddingAngle={3} dataKey="value">
+                        {statusData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
                 <div className="flex-1 space-y-1.5">
                   {statusData.map((s, i) => (
                     <div key={s.name} className="flex items-center justify-between">
