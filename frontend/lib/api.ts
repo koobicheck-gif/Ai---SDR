@@ -82,6 +82,8 @@ export interface Analytics {
 import {
   MOCK_CAMPAIGNS,
   MOCK_LEADS,
+  EDMOND_LEADS,
+  ALL_LEADS,
   MOCK_ANALYTICS,
 } from "./mockData";
 
@@ -111,7 +113,7 @@ export const leadApi = {
   listByCampaign: (campaignId: string) =>
     withFallback(
       () => api.get<Lead[]>(`/leads/campaign/${campaignId}`).then((r) => r.data),
-      MOCK_LEADS.filter((l) => l.campaign_id === campaignId || campaignId === MOCK_CAMPAIGNS[0]?.id ? MOCK_LEADS : [])
+      ALL_LEADS.filter((l) => l.campaign_id === campaignId)
     ),
   generate: (data: { campaign_id: string; count: number; use_mock: boolean }) =>
     api.post<Lead[]>("/leads/generate", data).then((r) => r.data),
