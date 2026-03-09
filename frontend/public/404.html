@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>AI SDR Dashboard</title>
+  <script>
+    // GitHub Pages SPA redirect: encode the path into the query string
+    // so the main index.html can restore it via history.replaceState.
+    var l = window.location;
+    var base = '/Car-warranty-AI-play';
+    var path = l.pathname.slice(base.length) || '/';
+    l.replace(
+      l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
+      base + '/?p=' + encodeURIComponent(path + l.search) +
+      (l.hash ? l.hash : '')
+    );
+  </script>
+</head>
+<body></body>
+</html>

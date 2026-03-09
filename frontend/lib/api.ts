@@ -78,18 +78,41 @@ export interface Analytics {
   cost_by_provider: Record<string, number>;
 }
 
+// Demo mode: fall back to mock data when backend is unreachable
+import {
+  MOCK_CAMPAIGNS,
+  MOCK_LEADS,
+  MOCK_ANALYTICS,
+} from "./mockData";
+
+async function withFallback<T>(apiFn: () => Promise<T>, fallback: T): Promise<T> {
+  try {
+    return await apiFn();
+  } catch {
+    return fallback;
+  }
+}
+
 // API calls
 export const campaignApi = {
-  list: () => api.get<Campaign[]>("/campaigns/").then((r) => r.data),
+  list: () =>
+    withFallback(() => api.get<Campaign[]>("/campaigns/").then((r) => r.data), MOCK_CAMPAIGNS),
   create: (data: { name: string; icp_description: string }) =>
     api.post<Campaign>("/campaigns/", data).then((r) => r.data),
-  get: (id: string) => api.get<Campaign>(`/campaigns/${id}`).then((r) => r.data),
+  get: (id: string) =>
+    withFallback(
+      () => api.get<Campaign>(`/campaigns/${id}`).then((r) => r.data),
+      MOCK_CAMPAIGNS.find((c) => c.id === id) ?? MOCK_CAMPAIGNS[0]
+    ),
   delete: (id: string) => api.delete(`/campaigns/${id}`).then((r) => r.data),
 };
 
 export const leadApi = {
   listByCampaign: (campaignId: string) =>
-    api.get<Lead[]>(`/leads/campaign/${campaignId}`).then((r) => r.data),
+    withFallback(
+      () => api.get<Lead[]>(`/leads/campaign/${campaignId}`).then((r) => r.data),
+      MOCK_LEADS.filter((l) => l.campaign_id === campaignId || campaignId === MOCK_CAMPAIGNS[0]?.id ? MOCK_LEADS : [])
+    ),
   generate: (data: { campaign_id: string; count: number; use_mock: boolean }) =>
     api.post<Lead[]>("/leads/generate", data).then((r) => r.data),
   research: (data: { lead_id: string; use_web_search: boolean }) =>
@@ -101,7 +124,10 @@ export const leadApi = {
     focus: string;
   }) => api.post<Message>("/leads/outreach", data).then((r) => r.data),
   getMessages: (leadId: string) =>
-    api.get<Message[]>(`/leads/${leadId}/messages`).then((r) => r.data),
+    withFallback(
+      () => api.get<Message[]>(`/leads/${leadId}/messages`).then((r) => r.data),
+      [] as Message[]
+    ),
   updateStatus: (leadId: string, status: LeadStatus) =>
     api.patch<Lead>(`/leads/${leadId}/status`, { status }).then((r) => r.data),
   delete: (leadId: string) => api.delete(`/leads/${leadId}`).then((r) => r.data),
@@ -109,21 +135,36 @@ export const leadApi = {
 
 export const analyticsApi = {
   get: (campaignId?: string) =>
-    api
-      .get<Analytics>("/analytics/", {
-        params: campaignId ? { campaign_id: campaignId } : {},
-      })
-      .then((r) => r.data),
+    withFallback(
+      () =>
+        api
+          .get<Analytics>("/analytics/", {
+            params: campaignId ? { campaign_id: campaignId } : {},
+          })
+          .then((r) => r.data),
+      MOCK_ANALYTICS
+    ),
 };
 
 export const settingsApi = {
-  getApiKeys: () => api.get("/settings/api-keys").then((r) => r.data),
+  getApiKeys: () => withFallback(() => api.get("/settings/api-keys").then((r) => r.data), []),
   upsertApiKey: (data: { provider: string; api_key: string }) =>
     api.post("/settings/api-keys", data).then((r) => r.data),
   deleteApiKey: (provider: string) =>
     api.delete(`/settings/api-keys/${provider}`).then((r) => r.data),
-  getModels: () => api.get("/settings/models").then((r) => r.data),
-  getLLMConfig: () => api.get("/settings/llm-config").then((r) => r.data),
+  getModels: () =>
+    withFallback(() => api.get("/settings/models").then((r) => r.data), {
+      anthropic: [
+        { id: "claude-haiku-4-5-20251001", name: "Claude Haiku 4.5 (fastest, cheapest)" },
+        { id: "claude-sonnet-4-6", name: "Claude Sonnet 4.6 (balanced)" },
+      ],
+      openai: [{ id: "gpt-4o-mini", name: "GPT-4o Mini (cheap)" }],
+    }),
+  getLLMConfig: () =>
+    withFallback(() => api.get("/settings/llm-config").then((r) => r.data), {
+      provider: "anthropic",
+      model: "claude-sonnet-4-6",
+    }),
   setLLMConfig: (data: { provider: string; model: string }) =>
     api.post("/settings/llm-config", data).then((r) => r.data),
 };
