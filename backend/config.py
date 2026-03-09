@@ -13,7 +13,10 @@ class Settings(BaseSettings):
 
     # App
     database_url: str = "sqlite+aiosqlite:///./sdr.db"
-    cors_origins: list[str] = ["http://localhost:3000", "http://localhost:3001"]
+
+    # CORS: comma-separated list of allowed origins.
+    # Example: "http://localhost:3000,https://yourdomain.com"
+    cors_origins: str = "http://localhost:3000,http://localhost:3001"
 
     # Default LLM provider: "anthropic" | "openai" | "openrouter"
     default_llm_provider: str = "anthropic"
@@ -21,6 +24,9 @@ class Settings(BaseSettings):
 
     class Config:
         env_file = ".env"
+
+    def get_cors_origins(self) -> list[str]:
+        return [o.strip() for o in self.cors_origins.split(",") if o.strip()]
 
 
 settings = Settings()

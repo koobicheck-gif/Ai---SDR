@@ -1,14 +1,15 @@
 import type { NextConfig } from "next";
 
-const isProd = process.env.NODE_ENV === "production";
+// Set GITHUB_PAGES=true in CI to enable static export + basePath for GitHub Pages.
+// Docker / self-hosted deployments leave this unset and get a normal Next.js server.
+const isGitHubPages = process.env.GITHUB_PAGES === "true";
 
 const nextConfig: NextConfig = {
-  output: "export",
+  ...(isGitHubPages && { output: "export" }),
   trailingSlash: true,
   images: { unoptimized: true },
-  // GitHub Pages serves from /Car-warranty-AI-play/ in production
-  basePath: isProd ? "/Ai---SDR" : "",
-  assetPrefix: isProd ? "/Ai---SDR" : "",
+  basePath: isGitHubPages ? "/Ai---SDR" : "",
+  assetPrefix: isGitHubPages ? "/Ai---SDR" : "",
 };
 
 export default nextConfig;

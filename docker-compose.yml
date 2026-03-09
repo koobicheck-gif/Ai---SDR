@@ -1,5 +1,11 @@
 version: "3.9"
 
+# ── Quick start ────────────────────────────────────────────────────────────────
+# 1. cp .env.example .env  (then fill in your API keys)
+# 2. For remote servers: set NEXT_PUBLIC_API_URL=http://YOUR_SERVER_IP:8000
+#                        and CORS_ORIGINS=http://YOUR_SERVER_IP:3000
+# 3. docker compose up --build -d
+
 services:
   backend:
     build:
@@ -8,26 +14,36 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - ./backend:/app
       - sdr_db:/app/data
     environment:
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
-      - TAVILY_API_KEY=${TAVILY_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY:-}
+      - TAVILY_API_KEY=${TAVILY_API_KEY:-}
       - DATABASE_URL=sqlite+aiosqlite:////app/data/sdr.db
+      # Comma-separated origins the frontend is served from.
+      # Remote: "http://YOUR_SERVER_IP:3000,https://yourdomain.com"
+      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:3000}
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        # Baked into the JS bundle at build time — must be the public backend URL.
+        # Remote: http://YOUR_SERVER_IP:8000
+        - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:8000}
     ports:
       - "3000:3000"
-    environment:
-      - NEXT_PUBLIC_API_URL=http://localhost:8000
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     restart: unless-stopped
 
 volumes:

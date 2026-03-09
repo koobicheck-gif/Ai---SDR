@@ -1,9 +1,21 @@
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 
 export const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000",
+  timeout: 30000,
   headers: { "Content-Type": "application/json" },
 });
+
+// Surface backend error messages instead of generic Axios errors
+api.interceptors.response.use(
+  (res) => res,
+  (err: AxiosError<{ detail?: string }>) => {
+    if (err.response?.data?.detail) {
+      err.message = err.response.data.detail;
+    }
+    return Promise.reject(err);
+  }
+);
 
 // Types
 export interface Campaign {
@@ -87,11 +99,17 @@ import {
   MOCK_ANALYTICS,
 } from "./mockData";
 
+// Only fall back to mock data when the backend is unreachable (network error / timeout).
+// When the backend IS reachable but returns an error (4xx/5xx), propagate it so the
+// UI can show the real failure instead of silently serving stale mock data.
 async function withFallback<T>(apiFn: () => Promise<T>, fallback: T): Promise<T> {
   try {
     return await apiFn();
-  } catch {
-    return fallback;
+  } catch (err) {
+    if (axios.isAxiosError(err) && err.response) {
+      throw err; // Backend responded — surface the real error
+    }
+    return fallback; // Network error / backend unreachable — use mock data
   }
 }
 

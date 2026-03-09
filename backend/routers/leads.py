@@ -112,13 +112,18 @@ async def research_lead_endpoint(body: ResearchLeadRequest, db: AsyncSession = D
     lead.status = LeadStatus.researching
     await db.commit()
 
-    research_data, provider, model, tokens, cost = await research_lead(
-        lead_name=lead.name,
-        lead_title=lead.title,
-        lead_company=lead.company,
-        icp_criteria=icp,
-        use_web_search=body.use_web_search,
-    )
+    try:
+        research_data, provider, model, tokens, cost = await research_lead(
+            lead_name=lead.name,
+            lead_title=lead.title,
+            lead_company=lead.company,
+            icp_criteria=icp,
+            use_web_search=body.use_web_search,
+        )
+    except Exception as e:
+        lead.status = LeadStatus.new  # revert status
+        await db.commit()
+        raise HTTPException(status_code=500, detail=f"Lead research failed: {str(e)}")
 
     lead.research_notes = research_data.get("research_summary", "")
     lead.pain_points = research_data.get("pain_points", lead.pain_points or [])
@@ -156,13 +161,16 @@ async def generate_outreach_endpoint(body: GenerateOutreachRequest, db: AsyncSes
         "pain_points": lead.pain_points or [],
     }
 
-    msg_data, provider, model, tokens, cost = await generate_outreach(
-        lead=lead_dict,
-        research=research,
-        channel=body.channel,
-        tone=body.tone,
-        focus=body.focus,
-    )
+    try:
+        msg_data, provider, model, tokens, cost = await generate_outreach(
+            lead=lead_dict,
+            research=research,
+            channel=body.channel,
+            tone=body.tone,
+            focus=body.focus,
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Outreach generation failed: {str(e)}")
 
     message = Message(
         id=str(uuid.uuid4()),
@@ -181,7 +189,6 @@ async def generate_outreach_endpoint(body: GenerateOutreachRequest, db: AsyncSes
 
     if lead.status in (LeadStatus.new, LeadStatus.ready, LeadStatus.researching):
         lead.status = LeadStatus.contacted
-        lead.sent_at = datetime.utcnow() if hasattr(lead, "sent_at") else None
         lead.updated_at = datetime.utcnow()
 
     await db.commit()

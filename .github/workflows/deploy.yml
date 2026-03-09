@@ -39,6 +39,7 @@ jobs:
         run: npm run build
         env:
           NODE_ENV: production
+          GITHUB_PAGES: "true"
           NEXT_PUBLIC_API_URL: ""
 
       - name: Upload Pages artifact

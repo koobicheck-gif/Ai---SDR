@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Integer, Float, DateTime, Text, JSON, Enum as SAEnum, ForeignKey
+from sqlalchemy import Column, String, Integer, Float, DateTime, Text, JSON, Enum as SAEnum, ForeignKey, text
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, relationship
 from sqlalchemy.ext.asyncio import async_sessionmaker
@@ -91,9 +91,17 @@ class ApiKey(Base):
 
     id = Column(String, primary_key=True)
     provider = Column(String, nullable=False)  # anthropic | openai | openrouter | tavily
-    key_preview = Column(String)  # last 4 chars only
+    key_preview = Column(String)  # last 4 chars only for display
     is_active = Column(String, default="true")
     created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class AppConfig(Base):
+    """Generic key-value store for persisted app configuration (API keys, LLM settings)."""
+    __tablename__ = "app_config"
+
+    key = Column(String, primary_key=True)
+    value = Column(Text, nullable=True)
 
 
 async def get_db():
@@ -107,3 +115,5 @@ async def get_db():
 async def init_db():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+        # SQLite-safe migration: add app_config table if it didn't exist yet
+        # (create_all is idempotent for new tables, so this is handled above)

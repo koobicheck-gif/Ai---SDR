@@ -1,16 +1,23 @@
+import os
+import uuid
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from models.database import get_db, ApiKey
+from models.database import get_db, ApiKey, AppConfig
 from pydantic import BaseModel
-from typing import Optional
-import uuid
 
 router = APIRouter(prefix="/settings", tags=["settings"])
 
+ENV_MAP = {
+    "anthropic": "ANTHROPIC_API_KEY",
+    "openai": "OPENAI_API_KEY",
+    "openrouter": "OPENROUTER_API_KEY",
+    "tavily": "TAVILY_API_KEY",
+}
+
 
 class ApiKeyUpsert(BaseModel):
-    provider: str  # anthropic | openai | openrouter | tavily
+    provider: str
     api_key: str
 
 
@@ -37,37 +44,34 @@ async def list_api_keys(db: AsyncSession = Depends(get_db)):
 
 @router.post("/api-keys")
 async def upsert_api_key(body: ApiKeyUpsert, db: AsyncSession = Depends(get_db)):
-    # Store in environment (in-memory for this session) and DB preview
-    import os
-    env_map = {
-        "anthropic": "ANTHROPIC_API_KEY",
-        "openai": "OPENAI_API_KEY",
-        "openrouter": "OPENROUTER_API_KEY",
-        "tavily": "TAVILY_API_KEY",
-    }
-    env_var = env_map.get(body.provider.lower())
-    if env_var:
-        os.environ[env_var] = body.api_key
-        # Also update settings
-        from config import settings
-        setattr(settings, env_var.lower(), body.api_key)
+    provider = body.provider.lower()
+    env_var = ENV_MAP.get(provider)
+    if not env_var:
+        raise HTTPException(status_code=400, detail=f"Unknown provider '{body.provider}'. Must be one of: {list(ENV_MAP)}")
 
-    # Upsert preview in DB
-    result = await db.execute(select(ApiKey).where(ApiKey.provider == body.provider))
-    existing = result.scalar_one_or_none()
+    # Apply to current process
+    os.environ[env_var] = body.api_key
+    from config import settings
+    setattr(settings, env_var.lower(), body.api_key)
 
-    preview = f"...{body.api_key[-4:]}" if len(body.api_key) > 4 else "****"
-
-    if existing:
-        existing.key_preview = preview
-        existing.is_active = "true"
+    # Persist full key in AppConfig so it survives restarts
+    config_key = f"api_key.{provider}"
+    config_result = await db.execute(select(AppConfig).where(AppConfig.key == config_key))
+    existing_config = config_result.scalar_one_or_none()
+    if existing_config:
+        existing_config.value = body.api_key
     else:
-        db.add(ApiKey(
-            id=str(uuid.uuid4()),
-            provider=body.provider,
-            key_preview=preview,
-            is_active="true",
-        ))
+        db.add(AppConfig(key=config_key, value=body.api_key))
+
+    # Upsert display preview in ApiKey table
+    preview = f"...{body.api_key[-4:]}" if len(body.api_key) > 4 else "****"
+    key_result = await db.execute(select(ApiKey).where(ApiKey.provider == body.provider))
+    existing_key = key_result.scalar_one_or_none()
+    if existing_key:
+        existing_key.key_preview = preview
+        existing_key.is_active = "true"
+    else:
+        db.add(ApiKey(id=str(uuid.uuid4()), provider=body.provider, key_preview=preview, is_active="true"))
 
     await db.commit()
     return {"success": True, "provider": body.provider, "preview": preview}
@@ -75,11 +79,28 @@ async def upsert_api_key(body: ApiKeyUpsert, db: AsyncSession = Depends(get_db))
 
 @router.delete("/api-keys/{provider}")
 async def delete_api_key(provider: str, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(ApiKey).where(ApiKey.provider == provider))
-    key = result.scalar_one_or_none()
+    provider_lower = provider.lower()
+
+    # Remove display record
+    key_result = await db.execute(select(ApiKey).where(ApiKey.provider == provider))
+    key = key_result.scalar_one_or_none()
     if key:
         await db.delete(key)
-        await db.commit()
+
+    # Remove persisted full key
+    config_key = f"api_key.{provider_lower}"
+    config_result = await db.execute(select(AppConfig).where(AppConfig.key == config_key))
+    config = config_result.scalar_one_or_none()
+    if config:
+        await db.delete(config)
+
+    await db.commit()
+
+    # Remove from current process environment
+    env_var = ENV_MAP.get(provider_lower)
+    if env_var and env_var in os.environ:
+        del os.environ[env_var]
+
     return {"deleted": True}
 
 
@@ -108,14 +129,34 @@ async def get_available_models():
 
 
 @router.post("/llm-config")
-async def set_llm_config(body: LLMConfig):
+async def set_llm_config(body: LLMConfig, db: AsyncSession = Depends(get_db)):
     from config import settings
     settings.default_llm_provider = body.provider
     settings.default_model = body.model
+
+    # Persist to DB
+    for key, value in [("llm.provider", body.provider), ("llm.model", body.model)]:
+        result = await db.execute(select(AppConfig).where(AppConfig.key == key))
+        existing = result.scalar_one_or_none()
+        if existing:
+            existing.value = value
+        else:
+            db.add(AppConfig(key=key, value=value))
+
+    await db.commit()
     return {"provider": body.provider, "model": body.model}
 
 
 @router.get("/llm-config")
-async def get_llm_config():
+async def get_llm_config(db: AsyncSession = Depends(get_db)):
     from config import settings
-    return {"provider": settings.default_llm_provider, "model": settings.default_model}
+
+    provider_result = await db.execute(select(AppConfig).where(AppConfig.key == "llm.provider"))
+    model_result = await db.execute(select(AppConfig).where(AppConfig.key == "llm.model"))
+    provider_cfg = provider_result.scalar_one_or_none()
+    model_cfg = model_result.scalar_one_or_none()
+
+    return {
+        "provider": provider_cfg.value if provider_cfg else settings.default_llm_provider,
+        "model": model_cfg.value if model_cfg else settings.default_model,
+    }
