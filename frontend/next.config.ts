@@ -7,8 +7,8 @@ const nextConfig: NextConfig = {
   trailingSlash: true,
   images: { unoptimized: true },
   // GitHub Pages serves from /Car-warranty-AI-play/ in production
-  basePath: isProd ? "/Car-warranty-AI-play" : "",
-  assetPrefix: isProd ? "/Car-warranty-AI-play" : "",
+  basePath: isProd ? "/ai---sdr" : "",
+  assetPrefix: isProd ? "/ai---sdr" : "",
 };
 
 export default nextConfig;
