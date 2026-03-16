@@ -11,8 +11,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    ports:
-      - "8000:8000"
+    network_mode: host
     volumes:
       - sdr_db:/app/data
     environment:
@@ -42,8 +41,7 @@ services:
         # Baked into the JS bundle at build time — must be the public backend URL.
         # Remote: http://YOUR_SERVER_IP:8000
         - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:8000}
-    ports:
-      - "3000:3000"
+    network_mode: host
     depends_on:
       backend:
         condition: service_healthy
