@@ -9,12 +9,14 @@ import {
   Settings,
   Zap,
   ChevronRight,
+  FileText,
 } from "lucide-react";
 
 const NAV_ITEMS = [
   { href: "/", icon: LayoutDashboard, label: "Dashboard" },
   { href: "/campaigns", icon: Target, label: "Campaigns" },
   { href: "/analytics", icon: BarChart3, label: "Analytics" },
+  { href: "/reports", icon: FileText, label: "Reports" },
   { href: "/settings", icon: Settings, label: "Settings" },
 ];
 
